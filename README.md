@@ -41,17 +41,57 @@ No hay backend ni autenticación real. La facturación usa un proveedor simulado
 
 ## Organización del código
 
-- `index.html`: estructura inicial de la página y carga de JavaScript.
-- `styles.css`: diseño Corporate y adaptación a pantallas pequeñas.
-- `app.js`: navegación, pantallas, formularios y almacenamiento en el navegador.
-- `domain.js`: cálculos de IVA, comisiones, recepción y alertas.
-- `inventory.js`: filtros, orden y estados del inventario.
-- `date-picker.js` y `calendar-dates.js`: calendario visual y operaciones con fechas.
-- `search-select.js` y `search-choices.js`: listas con búsqueda por nombre.
-- `tests/`: pruebas automáticas de la lógica; no son necesarias para navegar el sitio.
+```text
+DistriGest/
+├── index.html
+├── styles.css
+├── js/
+│   ├── app.js
+│   ├── datos/
+│   │   └── datos-iniciales.js
+│   ├── componentes/
+│   │   ├── calendario.js
+│   │   ├── filtro-buscador.js
+│   │   └── iconos.js
+│   └── logica/
+│       ├── calculos.js
+│       ├── inventario.js
+│       ├── fechas.js
+│       └── busquedas.js
+├── tests/
+├── package.json
+└── README.md
+```
+
+### Por dónde empezar a leer
+
+1. `index.html` carga el diseño y el archivo principal `js/app.js`.
+2. `js/app.js` conecta las pantallas, menús, formularios y datos guardados en el navegador. Sus funciones tienen comentarios básicos en español.
+3. `js/datos/datos-iniciales.js` contiene los clientes, proveedores, productos, ventas y documentos ficticios con los que comienza la demostración.
+4. `js/logica/` contiene los cálculos y filtros, separados de la presentación.
+5. `js/componentes/` contiene los controles que se repiten en varias pantallas.
+
+### Qué hace cada archivo JavaScript
+
+| Archivo | Responsabilidad |
+| --- | --- |
+| `js/app.js` | Construye las pantallas, escucha los botones y formularios y guarda los cambios en localStorage. |
+| `js/datos/datos-iniciales.js` | Entrega los datos de ejemplo y permite restaurar el estado inicial. |
+| `js/logica/calculos.js` | Calcula IVA, comisiones, recepción de mercadería y estados de vencimiento. |
+| `js/logica/inventario.js` | Filtra y ordena los lotes y determina la etiqueta que aparece en cada pestaña. |
+| `js/logica/fechas.js` | Prepara los días de un mes y suma días a una fecha. |
+| `js/logica/busquedas.js` | Busca nombres sin distinguir tildes ni mayúsculas. |
+| `js/componentes/calendario.js` | Dibuja y controla el calendario personalizado. |
+| `js/componentes/filtro-buscador.js` | Dibuja las listas con búsqueda y aplica la opción seleccionada. |
+| `js/componentes/iconos.js` | Contiene los dibujos SVG utilizados por la interfaz. |
+
+### Otros archivos
+
+- `styles.css`: diseño Corporate y adaptación a móviles.
+- `tests/`: pruebas automáticas de la lógica. No son necesarias para navegar el sitio.
 - `package.json`: indica a Node.js que los archivos .js usan módulos y permite ejecutar `npm test`. No instala bibliotecas.
 - `.nojekyll`: evita que GitHub Pages transforme los archivos del prototipo.
 
-Todos los archivos de la aplicación usan JavaScript estándar. Se usa `type="module"` en HTML para permitir `import` y `export` entre archivos .js. No se usa un framework.
+Todos los archivos usan JavaScript estándar. `import` permite usar una función de otro archivo y `export` permite compartirla. El HTML usa `type="module"` para habilitar esta organización. No se usa un framework.
 
 La carpeta temporal `tmp` del espacio de trabajo no forma parte de este repositorio ni de la aplicación.
