@@ -29,7 +29,7 @@ No requiere instalar dependencias ni compilar. Usa HTML, CSS y módulos JavaScri
 
 ## Pruebas
 
-Con Node.js: `node --test tests/*.test.mjs`.
+Con Node.js: `node --test tests/*.test.js`.
 
 ## Publicación
 
@@ -38,3 +38,20 @@ GitHub Pages publica la rama `main` desde la raíz del repositorio. Al actualiza
 ## Alcance
 
 No hay backend ni autenticación real. La facturación usa un proveedor simulado. El registro de documentos no cambia las ventas históricas. Las órdenes de compra son datos previos para explorar la recepción. Se pueden restaurar los datos iniciales desde Acerca del prototipo.
+
+## Organización del código
+
+- `index.html`: estructura inicial de la página y carga de JavaScript.
+- `styles.css`: diseño Corporate y adaptación a pantallas pequeñas.
+- `app.js`: navegación, pantallas, formularios y almacenamiento en el navegador.
+- `domain.js`: cálculos de IVA, comisiones, recepción y alertas.
+- `inventory.js`: filtros, orden y estados del inventario.
+- `date-picker.js` y `calendar-dates.js`: calendario visual y operaciones con fechas.
+- `search-select.js` y `search-choices.js`: listas con búsqueda por nombre.
+- `tests/`: pruebas automáticas de la lógica; no son necesarias para navegar el sitio.
+- `package.json`: indica a Node.js que los archivos .js usan módulos y permite ejecutar `npm test`. No instala bibliotecas.
+- `.nojekyll`: evita que GitHub Pages transforme los archivos del prototipo.
+
+Todos los archivos de la aplicación usan JavaScript estándar. Se usa `type="module"` en HTML para permitir `import` y `export` entre archivos .js. No se usa un framework.
+
+La carpeta temporal `tmp` del espacio de trabajo no forma parte de este repositorio ni de la aplicación.

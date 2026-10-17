@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 let calendar={};
-try {calendar=await import('../calendar-dates.mjs');}catch{}
+try {calendar=await import('../calendar-dates.js');}catch{}
 test('febrero bisiesto ofrece 29 días con semana iniciando en lunes',()=>{
   assert.equal(typeof calendar.monthDays,'function');
   const days=calendar.monthDays(2028,1);

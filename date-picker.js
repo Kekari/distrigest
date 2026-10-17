@@ -1,4 +1,4 @@
-import {MONTHS,monthDays,addDays,isSelectable} from './calendar-dates.mjs';
+import {MONTHS,monthDays,addDays,isSelectable} from './calendar-dates.js';
 const calendarIcon='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v16H4z M8 3v4 M16 3v4 M4 10h16 M8 14h2 M14 14h2 M8 17h2"/></svg>';
 const chevron=direction=>`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${direction==='left'?'m15 6-6 6 6 6':'m9 6 6 6-6 6'}"/></svg>`;
 const localToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Santiago',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());

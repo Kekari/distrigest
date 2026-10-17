@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 let inventory={};
-try {inventory=await import('../inventory.mjs');}catch{}
+try {inventory=await import('../inventory.js');}catch{}
 const today='2026-10-17';
 const stock=[
   {id:'expired',product:'Queso',sku:'Q',lot:'Q1',location:'Angol',expiry:'2026-10-15',quantity:18,minimum:30},

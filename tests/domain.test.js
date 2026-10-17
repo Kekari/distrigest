@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 let domain = {};
-try { domain = await import('../domain.mjs'); } catch {}
+try { domain = await import('../domain.js'); } catch {}
 test('recepción parcial aumenta solo las unidades recibidas y registra diferencia', () => {
   assert.equal(typeof domain.receiveStock, 'function');
   const result = domain.receiveStock([], { product:'Leche', lot:'L01', location:'Temuco · A1', expiry:'2026-11-20', expected:100, received:85, minimum:20 });

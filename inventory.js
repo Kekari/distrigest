@@ -1,4 +1,4 @@
-import {stockStatus} from './domain.mjs';
+import {stockStatus} from './domain.js';
 
 export function inventoryItems(stock,{tab='all',query='',warehouse=''}={},today){
   const q=query.toLocaleLowerCase('es');

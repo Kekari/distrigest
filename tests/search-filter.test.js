@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 let search={};
-try{search=await import('../search-choices.mjs');}catch{}
+try{search=await import('../search-choices.js');}catch{}
 const choices=[{value:'c1',label:'Almacén Don Pedro'},{value:'c2',label:'Minimarket El Roble'},{value:'c3',label:'Restaurante La Araucana'}];
 test('la búsqueda encuentra fragmentos del nombre ignorando tildes y mayúsculas',()=>{
   assert.equal(typeof search.matchingChoices,'function');
