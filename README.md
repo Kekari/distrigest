@@ -2,6 +2,8 @@
 
 Prototipo web académico de gestión comercial e inventario para DistriSur Araucanía SpA, con diseño Corporate.
 
+La versión 2 renueva navegación, panel de operaciones, indicadores, tablas, formularios y controles, con tipografía Open Sans y Poppins y adaptación a móviles.
+
 ## Revisar el prototipo
 
 https://kekari.github.io/distrigest/
