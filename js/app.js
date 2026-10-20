@@ -451,7 +451,7 @@ function documentsPage() {
       btn('Nuevo documento', 'new-document', true),
       'GESTIÓN DOCUMENTAL'
     ) +
-    `<div class="notice amber">${icon('info', 18)}<span><strong>Emisión de demostración.</strong> El proveedor DTE está simulado. Estos documentos no tienen validez tributaria ni se envían al SII.</span></div><section class="panel"><div class="toolbar">${search('Buscar documento o cliente…')}${select('type', 'Todos los documentos', ['Factura electrónica', 'Guía de despacho', 'Nota de crédito'], filter.type)}</div>${table(
+    `<section class="panel"><div class="toolbar">${search('Buscar documento o cliente…')}${select('type', 'Todos los documentos', ['Factura electrónica', 'Guía de despacho', 'Nota de crédito'], filter.type)}</div>${table(
       ['Documento', 'Cliente', 'Fecha', 'Neto', 'Total con IVA', 'Estado', ''],
       docs.map((d) => [
         `<span class="id">${d.id}</span><small>${d.type}${d.reference ? ' · Ref. ' + esc(d.reference) : ''}</small>`,
