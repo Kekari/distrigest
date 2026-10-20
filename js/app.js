@@ -640,7 +640,7 @@ function editSupplier(id) {
 function newDocument() {
   openModal(
     'Nuevo documento de demostración',
-    `<div class="notice amber">${icon('info', 17)}<span>El proveedor DTE se simula. No se emitirán documentos tributarios reales.</span></div><div class="form-grid">${selectField('type', 'Tipo de documento', ['Factura electrónica', 'Guía de despacho', 'Nota de crédito'], 'Factura electrónica')}${selectField(
+    `<div class="form-grid">${selectField('type', 'Tipo de documento', ['Factura electrónica', 'Guía de despacho', 'Nota de crédito'], 'Factura electrónica')}${selectField(
       'client',
       'Cliente',
       db.clients.filter((c) => c.status === 'Activo')
