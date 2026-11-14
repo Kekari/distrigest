@@ -1,5 +1,6 @@
 // Punto de entrada: conecta las pantallas, los formularios y los datos del prototipo.
 import { createInitialData as seed } from './datos/datos-iniciales.js';
+import { createStorage } from './datos/persistencia.js';
 import { icon } from './componentes/iconos.js';
 import { searchSelect } from './componentes/filtro-buscador.js';
 import { inventoryItems, inventoryState } from './logica/inventario.js';
@@ -50,19 +51,30 @@ const tag = (label, color = 'green') =>
 const btn = (label, action, primary = false, ic = 'plus') =>
   `<button class="btn ${primary ? 'primary' : ''}" data-action="${action}">${icon(ic, 15)}${label}</button>`;
 
-// Nombre usado para guardar los datos del prototipo en este navegador.
-const STORAGE = 'distrigest-demo-v1';
-
-// Carga los datos guardados. Si no existen o hay un problema, usa los datos de ejemplo.
-let db;
+// En modo MySQL no se usan copias locales para ocultar un fallo de conexión.
+const mysqlMode = Boolean(window.DISTRIGEST_API);
 let storageWarning = false;
-try {
-  db = JSON.parse(localStorage.getItem(STORAGE)) || seed();
-  if (!Array.isArray(db.clients) || !Array.isArray(db.stock)) db = seed();
-} catch {
-  db = seed();
-  storageWarning = true;
+let startupError = '';
+let local = null;
+if (!mysqlMode) {
+  try {
+    local = window.localStorage;
+  } catch {
+    storageWarning = true;
+  }
 }
+const storage = createStorage({ api: window.DISTRIGEST_API, local });
+let db;
+try {
+  db = (await storage.load()) || seed();
+  if (!Array.isArray(db.clients) || !Array.isArray(db.stock)) throw new Error('Datos inválidos.');
+} catch (error) {
+  if (mysqlMode) startupError = error.message;
+  else storageWarning = true;
+  db = seed();
+}
+let savedState = structuredClone(db);
+let saving = false;
 
 // Guarda la pantalla actual, la búsqueda y los filtros seleccionados.
 let route = location.hash.slice(1) || 'dashboard',
@@ -96,13 +108,19 @@ const client = (id) =>
 const supplier = (id) =>
   db.suppliers.find((x) => x.id === id) || { name: 'Proveedor no encontrado' };
 
-// Guarda los cambios en localStorage para conservarlos al recargar la página.
-const save = () => {
+// Espera la confirmación del servidor antes de mostrar un guardado exitoso.
+const save = async () => {
+  if (saving) throw new Error('Espera a que termine el guardado anterior.');
+  saving = true;
   try {
-    localStorage.setItem(STORAGE, JSON.stringify(db));
-  } catch {
-    storageWarning = true;
-    toast('Los cambios están en memoria: el navegador no permite guardarlos.');
+    await storage.save(db);
+    savedState = structuredClone(db);
+  } catch (error) {
+    db = structuredClone(savedState);
+    if (!mysqlMode) storageWarning = true;
+    throw new Error(mysqlMode ? error.message : 'No se pudo guardar en este navegador.');
+  } finally {
+    saving = false;
   }
 };
 
@@ -173,7 +191,7 @@ function shell() {
     .map(([key, label]) => nav(key, label))
     .join(
       ''
-    )}</nav><div class="sidebar-bottom"><div class="sidebar-note"><strong>Tu espacio de demostración</strong><p>Explora los módulos con datos de ejemplo y prueba cada flujo.</p><button data-action="about">Conocer el prototipo →</button></div><div class="company">DistriSur Araucanía SpA</div><div class="company-location">Temuco · Angol, Chile</div><div class="version"><span class="dot"></span>Corporate · v2.0</div></div></aside><div class="shell"><header class="topbar"><div class="breadcrumb"><button class="icon-btn mobile-menu" data-action="menu" aria-label="Abrir navegación">${icon('menu')}</button>${icon('building', 15)}<span>DistriSur Araucanía</span><span style="color:#bac4d1">/</span><strong>${routes[route][0]}</strong></div><div class="top-actions"><span class="demo-pill">ENTORNO DE DEMOSTRACIÓN</span><button class="icon-btn" data-go="alerts" aria-label="Ver alertas">${icon('bell', 19)}${alerts.length ? '<span class="notification-dot"></span>' : ''}</button><div class="profile"><div class="avatar">AD</div><div><div class="profile-name">Administrador</div><div class="profile-role">Vista de demostración</div></div></div></div></header><main id="content" tabindex="-1">${storageWarning ? '<div class="notice amber">El almacenamiento local no está disponible. Los cambios se conservarán solo mientras esta página esté abierta.</div>' : ''}<div id="page-content"></div><footer class="footer"><span>© 2026 <strong>DistriGest</strong> · Desarrollado para DistriSur Araucanía SpA</span><span>Datos ficticios · Guardado en este navegador <button class="text-btn" style="display:inline;font-size:9px;margin-left:10px" data-action="about">Acerca del prototipo</button></span></footer></main></div>`;
+    )}</nav><div class="sidebar-bottom"><div class="sidebar-note"><strong>Tu espacio de demostración</strong><p>Explora los módulos con datos de ejemplo y prueba cada flujo.</p><button data-action="about">Conocer el prototipo →</button></div><div class="company">DistriSur Araucanía SpA</div><div class="company-location">Temuco · Angol, Chile</div><div class="version"><span class="dot"></span>Corporate · v2.0</div></div></aside><div class="shell"><header class="topbar"><div class="breadcrumb"><button class="icon-btn mobile-menu" data-action="menu" aria-label="Abrir navegación">${icon('menu')}</button>${icon('building', 15)}<span>DistriSur Araucanía</span><span style="color:#bac4d1">/</span><strong>${routes[route][0]}</strong></div><div class="top-actions"><span class="demo-pill">ENTORNO DE DEMOSTRACIÓN</span><button class="icon-btn" data-go="alerts" aria-label="Ver alertas">${icon('bell', 19)}${alerts.length ? '<span class="notification-dot"></span>' : ''}</button><div class="profile"><div class="avatar">AD</div><div><div class="profile-name">Administrador</div><div class="profile-role">Vista de demostración</div></div></div></div></header><main id="content" tabindex="-1">${storageWarning ? '<div class="notice amber">El almacenamiento local no está disponible. Habilítalo para poder guardar cambios.</div>' : ''}<div id="page-content"></div><footer class="footer"><span>© 2026 <strong>DistriGest</strong> · Desarrollado para DistriSur Araucanía SpA</span><span>Datos ficticios · ${mysqlMode ? 'Guardado en MySQL' : 'Guardado en este navegador'} <button class="text-btn" style="display:inline;font-size:9px;margin-left:10px" data-action="about">Acerca del prototipo</button></span></footer></main></div>`;
 }
 
 // Dibuja una opción del menú y marca la pantalla seleccionada.
@@ -277,7 +295,7 @@ function dashboard() {
         tag('Emitido · demo'),
         `<button class="icon-btn" data-action="view-document" data-id="${d.id}" aria-label="Ver documento ${d.id}">${icon('arrow', 15)}</button>`
       ])
-    )}<div class="table-footer"><span>Mostrando ${docs.length} de ${db.documents.length} documentos</span><span>Última actividad de demostración</span></div></section><section class="section-gap"><div class="notice">${icon('info', 17)}<span><strong>Un espacio para explorar.</strong> Este prototipo utiliza datos ficticios. Puedes registrar, editar y probar los flujos; tus cambios se guardan en este navegador.</span></div></section>`
+    )}<div class="table-footer"><span>Mostrando ${docs.length} de ${db.documents.length} documentos</span><span>Última actividad de demostración</span></div></section><section class="section-gap"><div class="notice">${icon('info', 17)}<span><strong>Un espacio para explorar.</strong> Este prototipo utiliza datos ficticios. Puedes registrar, editar y probar los flujos; tus cambios se guardan ${mysqlMode ? 'en MySQL' : 'en este navegador'}.</span></div></section>`
   );
 }
 
@@ -536,6 +554,7 @@ function commissionsPage() {
 
 // Dibuja la estructura general y después carga la pantalla actual.
 function render() {
+  if (startupError) return;
   if (!routes[route]) route = 'dashboard';
   document.querySelector('#app').innerHTML = shell();
   updatePage();
@@ -586,15 +605,19 @@ function editClient(id) {
   openModal(
     c.id ? 'Editar cliente' : 'Nuevo cliente',
     `<p class="inline-help" style="margin:0 0 19px">Completa la información comercial. Los campos con * son obligatorios.</p><div class="form-grid">${field('name', 'Razón social', c.name)}${field('rut', 'RUT', c.rut, 'text', true, 'placeholder="12.345.678-5"')}${field('giro', 'Giro comercial', c.giro)}${field('address', 'Dirección de despacho', c.address)}${field('contact', 'Nombre de contacto', c.contact)}${field('email', 'Correo electrónico', c.email, 'email')}${field('phone', 'Teléfono', c.phone, 'tel', false)}${selectField('zone', 'Zona', ['Temuco', 'Angol', 'Villarrica', 'Lautaro'], c.zone)}${selectField('seller', 'Vendedor asignado', sellers(), c.seller)}${selectField('status', 'Estado', ['Activo', 'Inactivo'], c.status)}</div>`,
-    (f) => {
+    async (f) => {
       const data = Object.fromEntries(f);
       if (!validRut(data.rut))
         throw new Error('Revisa el RUT y su dígito verificador. Ejemplo válido: 12.345.678-5.');
       if (db.clients.some((x) => x.id !== id && cleanRut(x.rut) === cleanRut(data.rut)))
         throw new Error('Ya existe un cliente registrado con ese RUT.');
-      if (c.id) Object.assign(c, data);
+      if (c.id)
+        Object.assign(
+          db.clients.find((item) => item.id === c.id),
+          data
+        );
       else db.clients.push({ ...data, id: 'CL-' + crypto.randomUUID().slice(0, 6) });
-      save();
+      await save();
       toast(c.id ? 'Cliente actualizado.' : 'Cliente registrado.');
     }
   );
@@ -623,14 +646,18 @@ function editSupplier(id) {
   openModal(
     s.id ? 'Editar proveedor' : 'Nuevo proveedor',
     `<div class="form-grid">${field('name', 'Razón social', s.name)}${field('rut', 'RUT', s.rut)}${field('contact', 'Nombre de contacto', s.contact)}${field('email', 'Correo electrónico', s.email, 'email')}${field('phone', 'Teléfono', s.phone, 'tel', false)}${field('terms', 'Condiciones comerciales', s.terms, 'text', true, 'placeholder="Ej. Crédito a 30 días"')}${field('delivery', 'Plazo de entrega', s.delivery, 'text', true, 'placeholder="Ej. 48 horas"')}${selectField('status', 'Estado', ['Activo', 'Inactivo'], s.status)}</div>`,
-    (f) => {
+    async (f) => {
       const data = Object.fromEntries(f);
       if (!validRut(data.rut)) throw new Error('Revisa el RUT y su dígito verificador.');
       if (db.suppliers.some((x) => x.id !== id && cleanRut(x.rut) === cleanRut(data.rut)))
         throw new Error('Ya existe un proveedor con ese RUT.');
-      if (s.id) Object.assign(s, data);
+      if (s.id)
+        Object.assign(
+          db.suppliers.find((item) => item.id === s.id),
+          data
+        );
       else db.suppliers.push({ ...data, id: 'PR-' + crypto.randomUUID().slice(0, 6) });
-      save();
+      await save();
       toast('Proveedor guardado.');
     }
   );
@@ -650,7 +677,7 @@ function newDocument() {
       .join(
         ''
       )}</select><small>Una nota de crédito se vincula al cliente de su factura de referencia.</small></div>${selectField('product', 'Producto', [...new Set(db.stock.map((s) => s.product))])}${field('quantity', 'Cantidad', 1, 'number', true, 'min="1" max="999999" step="1"')}${field('price', 'Precio unitario neto (CLP)', 1000, 'number', true, 'min="1" max="999999999" step="1"')}<div class="field"><label>Resumen del documento</label><div id="document-preview" class="inline-help"></div></div></div>`,
-    (f) => {
+    async (f) => {
       const data = Object.fromEntries(f);
       const lines = [
         { product: data.product, quantity: Number(data.quantity), price: Number(data.price) }
@@ -687,9 +714,9 @@ function newDocument() {
       openModal(
         'Confirmar emisión simulada',
         `<div class="notice amber">${icon('info', 17)}<span>Se registrará un documento de demostración sin validez tributaria.</span></div><p>${esc(doc.type)} para <strong>${esc(client(doc.client).name)}</strong></p><div class="summary-line total"><span>Total con IVA</span><span>${money(totals(lines).total)}</span></div>`,
-        () => {
+        async () => {
           db.documents.push(doc);
-          save();
+          await save();
           toast(`${doc.id} creado en modo demostración.`);
         },
         'Confirmar documento'
@@ -750,11 +777,11 @@ function receive(form) {
   openModal(
     'Confirmar recepción',
     `<p>Se registrarán <strong>${entry.received} unidades</strong> de ${esc(entry.product)}.</p><dl class="detail-list"><div><dt>Lote</dt><dd>${esc(entry.lot)}</dd></div><div><dt>Ubicación</dt><dd>${esc(entry.location)}</dd></div><div><dt>Vencimiento</dt><dd>${date(entry.expiry)}</dd></div><div><dt>Saldo por recibir</dt><dd>${-result.difference} unidades</dd></div></dl>${result.difference ? '<div class="notice amber">Esta es una recepción parcial. La diferencia quedará pendiente en la orden de compra.</div>' : ''}`,
-    () => {
-      db.stock = result.stock;
-      order.received += entry.received;
+    async () => {
+      db.stock = receiveStock(db.stock, entry).stock;
+      db.orders.find((item) => item.id === order.id).received += entry.received;
       db.receipts.push({ ...entry, difference: result.difference, date: today() });
-      save();
+      await save();
       toast('Recepción registrada. Inventario actualizado.');
     },
     'Confirmar recepción'
@@ -786,7 +813,7 @@ function csv(name, headers, rows) {
 function about() {
   openModal(
     'Acerca de este prototipo',
-    `<div class="notice">${icon('info', 18)}<span><strong>DistriGest · Corporate v2.0</strong><br>Prototipo académico para la tercera evaluación de Ingeniería de Software.</span></div><p style="font-size:12px">Diseño Corporate. Datos ficticios y almacenamiento local por navegador. El rol administrador es una vista de demostración. La emisión DTE no está conectada a un proveedor real.</p><div class="coverage">${[
+    `<div class="notice">${icon('info', 18)}<span><strong>DistriGest · Corporate v2.0</strong><br>Prototipo académico para la tercera evaluación de Ingeniería de Software.</span></div><p style="font-size:12px">Diseño Corporate. Datos ficticios y almacenamiento ${mysqlMode ? 'en MySQL mediante el servidor local' : 'local por navegador'}. El rol administrador es una vista de demostración. La emisión DTE no está conectada a un proveedor real.</p><div class="coverage">${[
       ['RF-01', 'Clientes'],
       ['RF-08', 'Recepción de mercadería'],
       ['RF-10', 'Inventario por lote y ubicación'],
@@ -806,7 +833,12 @@ function about() {
 }
 
 // Escucha los clics en menús, pestañas y botones y ejecuta su acción.
-document.addEventListener('click', (e) => {
+document.addEventListener('click', async (e) => {
+  if (startupError) return;
+  if (saving) {
+    toast('Espera a que termine el guardado.');
+    return;
+  }
   const target = e.target.closest('[data-go],[data-action],[data-tab]');
   if (!target) return;
   if (target.dataset.go) {
@@ -840,7 +872,7 @@ document.addEventListener('click', (e) => {
       inventoryTab = 'all';
       updatePage();
     },
-    'save-rate': () => {
+    'save-rate': async () => {
       const rate = Number(document.querySelector('#rate').value);
       if (
         !Number.isFinite(rate) ||
@@ -852,7 +884,7 @@ document.addEventListener('click', (e) => {
         return;
       }
       db.rate = rate;
-      save();
+      await save();
       updatePage();
       toast('Tasa de demostración actualizada.');
     },
@@ -897,16 +929,21 @@ document.addEventListener('click', (e) => {
     reset: () =>
       openModal(
         'Restaurar datos iniciales',
-        `<p>Se eliminarán los cambios de demostración guardados en este navegador y se recuperarán los datos iniciales.</p>`,
-        () => {
+        `<p>${mysqlMode ? 'Se reemplazarán los datos de la base MySQL por los ejemplos iniciales.' : 'Se eliminarán los cambios de demostración guardados en este navegador y se recuperarán los datos iniciales.'}</p>`,
+        async () => {
           db = seed();
-          save();
+          await save();
           toast('Datos de demostración restaurados.');
         },
         'Restaurar datos'
       )
   };
-  actions[a]?.();
+  try {
+    await actions[a]?.();
+  } catch (error) {
+    updatePage();
+    toast(error.message);
+  }
 });
 
 // Actualiza las búsquedas y los totales mientras se escribe.
@@ -936,19 +973,31 @@ document.addEventListener('change', (e) => {
 });
 
 // Procesa los formularios sin recargar la página y muestra los errores.
-document.addEventListener('submit', (e) => {
+document.addEventListener('submit', async (e) => {
   if (e.target.id === 'modal-form') {
     e.preventDefault();
     try {
       const f = new FormData(e.target);
       for (const [key, val] of f) if (typeof val === 'string') f.set(key, val.trim());
-      const result = onModalSubmit?.(f);
+      const callback = onModalSubmit;
+      const submitButton = e.target.querySelector('[type="submit"]');
+      if (saving || submitButton?.disabled) return;
+      if (submitButton) submitButton.disabled = true;
+      let result;
+      try {
+        result = await callback?.(f);
+      } finally {
+        if (submitButton) submitButton.disabled = false;
+      }
       if (result !== false) {
         document.querySelector('#modal').close();
         render();
       }
     } catch (err) {
-      document.querySelector('#modal-error').textContent = err.message;
+      updatePage();
+      const errorMessage = document.querySelector('#modal-error');
+      if (errorMessage) errorMessage.textContent = err.message;
+      else toast(err.message);
     }
   }
   if (e.target.id === 'receive-form') {
@@ -972,5 +1021,8 @@ window.addEventListener('hashchange', () => {
   }
 });
 
-// Inicia la aplicación al terminar de cargar este archivo.
-render();
+// Si MySQL falla al iniciar, se muestra el error sin habilitar operaciones locales.
+if (startupError) {
+  document.querySelector('#app').innerHTML =
+    `<section class="panel padded"><h1>No se pudo cargar MySQL</h1><p>${esc(startupError)}</p><p>Revisa la conexión y recarga esta página.</p></section>`;
+} else render();

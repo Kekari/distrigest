@@ -4,6 +4,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "start": "node server/index.js",
+    "db:init": "node server/setup.js"
+  },
+  "dependencies": {
+    "express": "5.3.0",
+    "mysql2": "3.24.6"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

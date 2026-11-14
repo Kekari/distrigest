@@ -8,7 +8,7 @@ La versión 2 renueva navegación, panel de operaciones, indicadores, tablas, fo
 
 https://kekari.github.io/distrigest/
 
-Se puede navegar sin iniciar sesión. Todos los datos son de demostración. Los cambios se guardan únicamente en el navegador de cada persona y no se comparten entre revisores.
+La versión de GitHub Pages se puede navegar sin iniciar sesión. Todos sus datos son de demostración y los cambios se guardan únicamente en el navegador de cada persona. El repositorio incluye además un modo local con servidor y MySQL, descrito al final de esta guía.
 
 ## Funcionalidades
 
@@ -25,11 +25,11 @@ Se puede navegar sin iniciar sesión. Todos los datos son de demostración. Los 
 
 Desde esta carpeta, ejecutar `python -m http.server 4173` y abrir http://localhost:4173/.
 
-No requiere instalar dependencias ni compilar. Usa HTML, CSS y módulos JavaScript.
+Este modo de demostración no requiere instalar dependencias ni compilar. Usa HTML, CSS y módulos JavaScript. Para el modo con MySQL, sigue la guía al final.
 
 ## Pruebas
 
-Con Node.js: `node --test tests/*.test.js`.
+Instala las dependencias con `npm ci` y ejecuta `npm test`. Las pruebas de MySQL real se habilitan de forma explícita siguiendo [docs/MYSQL.md](docs/MYSQL.md).
 
 ## Publicación
 
@@ -37,7 +37,7 @@ GitHub Pages publica la rama `main` desde la raíz del repositorio. Al actualiza
 
 ## Alcance
 
-No hay backend ni autenticación real. La facturación usa un proveedor simulado. El registro de documentos no cambia las ventas históricas. Las órdenes de compra son datos previos para explorar la recepción. Se pueden restaurar los datos iniciales desde Acerca del prototipo.
+GitHub Pages no ejecuta el backend. El modo MySQL incluye un backend local sin autenticación de usuarios. La facturación usa un proveedor simulado. El registro de documentos no cambia las ventas históricas. Las órdenes de compra son datos previos para explorar la recepción. Se pueden restaurar los datos iniciales desde Acerca del prototipo.
 
 ## Organización del código
 
@@ -48,7 +48,8 @@ DistriGest/
 ├── js/
 │   ├── app.js
 │   ├── datos/
-│   │   └── datos-iniciales.js
+│   │   ├── datos-iniciales.js
+│   │   └── persistencia.js
 │   ├── componentes/
 │   │   ├── calendario.js
 │   │   ├── filtro-buscador.js
@@ -58,6 +59,11 @@ DistriGest/
 │       ├── inventario.js
 │       ├── fechas.js
 │       └── busquedas.js
+├── server/          # API y conexión MySQL
+├── database/        # Esquema SQL
+├── docs/MYSQL.md    # Instalación local
+├── config.js
+├── .env.example
 ├── tests/
 ├── package.json
 └── README.md
@@ -75,7 +81,7 @@ DistriGest/
 
 | Archivo | Responsabilidad |
 | --- | --- |
-| `js/app.js` | Construye las pantallas, escucha los botones y formularios y guarda los cambios en localStorage. |
+| `js/app.js` | Construye las pantallas, escucha los botones y formularios y guarda los cambios mediante la capa de persistencia. |
 | `js/datos/datos-iniciales.js` | Entrega los datos de ejemplo y permite restaurar el estado inicial. |
 | `js/logica/calculos.js` | Calcula IVA, comisiones, recepción de mercadería y estados de vencimiento. |
 | `js/logica/inventario.js` | Filtra y ordena los lotes y determina la etiqueta que aparece en cada pestaña. |
@@ -89,9 +95,23 @@ DistriGest/
 
 - `styles.css`: diseño Corporate y adaptación a móviles.
 - `tests/`: pruebas automáticas de la lógica. No son necesarias para navegar el sitio.
-- `package.json`: indica a Node.js que los archivos .js usan módulos y permite ejecutar `npm test`. No instala bibliotecas.
+- `package.json`: define los módulos JavaScript, las dependencias del servidor y los comandos `npm start`, `npm run db:init` y `npm test`. `package-lock.json` fija las versiones instaladas.
 - `.nojekyll`: evita que GitHub Pages transforme los archivos del prototipo.
 
 Todos los archivos usan JavaScript estándar. `import` permite usar una función de otro archivo y `export` permite compartirla. El HTML usa `type="module"` para habilitar esta organización. No se usa un framework.
 
 La carpeta temporal `tmp` del espacio de trabajo no forma parte de este repositorio ni de la aplicación.
+
+## Base de datos MySQL (ejecución local)
+
+El repositorio también incluye un servidor Node.js/Express y persistencia MySQL. Consulta [la guía de instalación MySQL](docs/MYSQL.md).
+
+```powershell
+npm ci
+Copy-Item .env.example .env
+# Configura tus credenciales MySQL en .env antes de continuar.
+npm run db:init
+npm start
+```
+
+Abre http://127.0.0.1:3000/. La versión de GitHub Pages mantiene el modo de demostración con localStorage. La base y el servidor no están alojados en GitHub Pages.
