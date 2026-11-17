@@ -7,3 +7,6 @@ Thumbs.db
 !.env.example
 tmp/
 *.log
+
+# Checkouts de trabajo aislados
+.worktrees/
