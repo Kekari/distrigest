@@ -108,3 +108,26 @@ test('validación rechaza relaciones rotas, lotes contradictorios y tasas fuera 
     assert.throws(() => validateState(state));
   }
 });
+
+test('la API rechaza teléfonos inválidos de clientes y proveedores y acepta números chilenos', () => {
+  for (const phone of ['12345', 'texto', '+1 987 654 3210', '9876543210']) {
+    for (const entity of ['clients', 'suppliers']) {
+      const state = createInitialData();
+      state[entity][0].phone = phone;
+      assert.throws(() => validateState(state), /teléfono/i, `${entity}: ${phone}`);
+    }
+  }
+  for (const phone of ['+56 9 8765 4321', '+56 45 222 3040', '987654321']) {
+    for (const entity of ['clients', 'suppliers']) {
+      const state = createInitialData();
+      state[entity][0].phone = phone;
+      assert.doesNotThrow(() => validateState(state), `${entity}: ${phone}`);
+    }
+  }
+});
+
+test('la API no permite omitir el teléfono en un objeto alterado', () => {
+  const state = createInitialData();
+  delete state.clients[0].phone;
+  assert.throws(() => validateState(state), /teléfono/i);
+});

@@ -6,6 +6,7 @@ import { searchSelect } from './componentes/filtro-buscador.js';
 import { inventoryItems, inventoryState } from './logica/inventario.js';
 import { datePicker } from './componentes/calendario.js';
 import { receiveStock, commission, totals, stockStatus } from './logica/calculos.js';
+import { isValidChileanPhone } from './logica/validaciones.js';
 
 // Muestra los montos en pesos chilenos y sin decimales.
 const money = (n) =>
@@ -604,9 +605,19 @@ function editClient(id) {
   const c = db.clients.find((c) => c.id === id) || {};
   openModal(
     c.id ? 'Editar cliente' : 'Nuevo cliente',
-    `<p class="inline-help" style="margin:0 0 19px">Completa la información comercial. Los campos con * son obligatorios.</p><div class="form-grid">${field('name', 'Razón social', c.name)}${field('rut', 'RUT', c.rut, 'text', true, 'placeholder="12.345.678-5"')}${field('giro', 'Giro comercial', c.giro)}${field('address', 'Dirección de despacho', c.address)}${field('contact', 'Nombre de contacto', c.contact)}${field('email', 'Correo electrónico', c.email, 'email')}${field('phone', 'Teléfono', c.phone, 'tel', false)}${selectField('zone', 'Zona', ['Temuco', 'Angol', 'Villarrica', 'Lautaro'], c.zone)}${selectField('seller', 'Vendedor asignado', sellers(), c.seller)}${selectField('status', 'Estado', ['Activo', 'Inactivo'], c.status)}</div>`,
+    `<p class="inline-help" style="margin:0 0 19px">Completa la información comercial. Los campos con * son obligatorios.</p><div class="form-grid">${field('name', 'Razón social', c.name)}${field('rut', 'RUT', c.rut, 'text', true, 'placeholder="12.345.678-5"')}${field('giro', 'Giro comercial', c.giro)}${field('address', 'Dirección de despacho', c.address)}${field('contact', 'Nombre de contacto', c.contact)}${field('email', 'Correo electrónico', c.email, 'email')}${field('phone', 'Teléfono', c.phone, 'tel', false, 'inputmode="tel" autocomplete="tel" maxlength="16" placeholder="+56 9 1234 5678"')}${selectField('zone', 'Zona', ['Temuco', 'Angol', 'Villarrica', 'Lautaro'], c.zone)}${selectField('seller', 'Vendedor asignado', sellers(), c.seller)}${selectField('status', 'Estado', ['Activo', 'Inactivo'], c.status)}</div>`,
     async (f) => {
       const data = Object.fromEntries(f);
+      if (!isValidChileanPhone(data.phone)) {
+        document
+          .querySelector('#f-phone')
+          .setCustomValidity(
+            'Ingresa un teléfono chileno válido de 9 dígitos. Puedes incluir +56.'
+          );
+        document.querySelector('#f-phone').reportValidity();
+        throw new Error('Ingresa un teléfono chileno válido de 9 dígitos. Puedes incluir +56.');
+      }
+      document.querySelector('#f-phone').setCustomValidity('');
       if (!validRut(data.rut))
         throw new Error('Revisa el RUT y su dígito verificador. Ejemplo válido: 12.345.678-5.');
       if (db.clients.some((x) => x.id !== id && cleanRut(x.rut) === cleanRut(data.rut)))
@@ -645,10 +656,22 @@ function editSupplier(id) {
   const s = db.suppliers.find((s) => s.id === id) || {};
   openModal(
     s.id ? 'Editar proveedor' : 'Nuevo proveedor',
-    `<div class="form-grid">${field('name', 'Razón social', s.name)}${field('rut', 'RUT', s.rut)}${field('contact', 'Nombre de contacto', s.contact)}${field('email', 'Correo electrónico', s.email, 'email')}${field('phone', 'Teléfono', s.phone, 'tel', false)}${field('terms', 'Condiciones comerciales', s.terms, 'text', true, 'placeholder="Ej. Crédito a 30 días"')}${field('delivery', 'Plazo de entrega', s.delivery, 'text', true, 'placeholder="Ej. 48 horas"')}${selectField('status', 'Estado', ['Activo', 'Inactivo'], s.status)}</div>`,
+    `<div class="form-grid">${field('name', 'Razón social', s.name)}${field('rut', 'RUT', s.rut)}${field('contact', 'Nombre de contacto', s.contact)}${field('email', 'Correo electrónico', s.email, 'email')}${field('phone', 'Teléfono', s.phone, 'tel', false, 'inputmode="tel" autocomplete="tel" maxlength="16" placeholder="+56 9 1234 5678"')}${field('terms', 'Condiciones comerciales', s.terms, 'text', true, 'placeholder="Ej. Crédito a 30 días"')}${field('delivery', 'Plazo de entrega', s.delivery, 'text', true, 'placeholder="Ej. 48 horas"')}${selectField('status', 'Estado', ['Activo', 'Inactivo'], s.status)}</div>`,
     async (f) => {
       const data = Object.fromEntries(f);
+      if (!isValidChileanPhone(data.phone)) {
+        document
+          .querySelector('#f-phone')
+          .setCustomValidity(
+            'Ingresa un teléfono chileno válido de 9 dígitos. Puedes incluir +56.'
+          );
+        document.querySelector('#f-phone').reportValidity();
+        throw new Error('Ingresa un teléfono chileno válido de 9 dígitos. Puedes incluir +56.');
+      }
+      document.querySelector('#f-phone').setCustomValidity('');
       if (!validRut(data.rut)) throw new Error('Revisa el RUT y su dígito verificador.');
+      if (!isValidChileanPhone(data.phone))
+        throw new Error('Ingresa un teléfono chileno válido de 9 dígitos. Puedes incluir +56.');
       if (db.suppliers.some((x) => x.id !== id && cleanRut(x.rut) === cleanRut(data.rut)))
         throw new Error('Ya existe un proveedor con ese RUT.');
       if (s.id)

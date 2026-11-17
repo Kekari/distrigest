@@ -1,4 +1,5 @@
 import { createInitialData } from '../js/datos/datos-iniciales.js';
+import { isValidChileanPhone } from '../js/logica/validaciones.js';
 
 // Comprueba datos y relaciones antes de enviar cualquier cambio a MySQL.
 export function validateState(state) {
@@ -44,6 +45,8 @@ export function validateState(state) {
   for (const key of ['clients', 'suppliers']) {
     const ruts = new Set();
     for (const row of state[key]) {
+      if (row.phone === undefined || row.phone === null)
+        fail('El campo teléfono debe estar presente.');
       required(row, ['name', 'rut', 'contact', 'email', 'status']);
       required(
         row,
@@ -52,6 +55,8 @@ export function validateState(state) {
       const rut = row.rut.replace(/[.\s-]/g, '').toUpperCase();
       if (ruts.has(rut)) fail('RUT repetido.');
       ruts.add(rut);
+      if (row.phone !== undefined && row.phone !== null && !isValidChileanPhone(row.phone))
+        fail(`Teléfono inválido para ${key === 'clients' ? 'el cliente' : 'el proveedor'}.`);
       if (!['Activo', 'Inactivo'].includes(row.status)) fail('Estado inválido.');
     }
   }
