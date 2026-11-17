@@ -104,7 +104,7 @@ La carpeta temporal `tmp` del espacio de trabajo no forma parte de este reposito
 
 ## Base de datos MySQL (ejecución local)
 
-El repositorio también incluye un servidor Node.js/Express y persistencia MySQL. Consulta [la guía de instalación MySQL](docs/MYSQL.md).
+El repositorio también incluye un servidor Node.js/Express y persistencia MySQL con tablas separadas para productos, lotes y existencias. Consulta [la guía de instalación MySQL](docs/MYSQL.md).
 
 ```powershell
 npm ci

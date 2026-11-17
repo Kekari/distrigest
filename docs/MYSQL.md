@@ -31,7 +31,7 @@ La interfaz de GitHub Pages continúa siendo una demostración con datos locales
    npm run db:init
    ```
 
-   Esta operación conserva los datos si la base ya fue inicializada. No es un sistema de migraciones para futuras versiones del esquema.
+   Esta operación carga ejemplos solo en una base nueva. En una base existente ejecuta la migración inicial, conserva el inventario antiguo como `inventario_legacy` y se detiene si no puede vincular un SKU sin ambigüedades. Haz un respaldo MySQL antes de actualizar una instalación con información que debas conservar.
 
 7. Inicia la aplicación:
 
@@ -62,10 +62,14 @@ Para detener la aplicación, pulsa `Ctrl+C` en la terminal. Los datos permanecen
 
 - `clientes`: datos comerciales y vendedor asignado.
 - `proveedores`: contacto y condiciones comerciales.
-- `inventario`: existencias por producto, lote y ubicación.
-- `ordenes_compra`: pedido y saldo recibido; referencia a proveedores.
+- `productos`: catálogo único con SKU, nombre y categoría.
+- `lotes`: producto relacionado, código, vencimiento y posición.
+- `inventario`: existencias y mínimo por lote y ubicación.
+- `ordenes_compra` y `ventas`: tienen `product_id` como clave foránea a `productos`.
+- La tabla anterior se conserva como `inventario_legacy` tras la migración.
+- `ordenes_compra`: pedido, saldo recibido y referencias a proveedores y productos.
 - `recepciones`: registro de recepciones; referencia a órdenes de compra.
-- `ventas`: ventas históricas y proporción cobrada; referencia a clientes.
+- `ventas`: ventas históricas y proporción cobrada; referencia a clientes y productos.
 - `documentos`: documentos simulados; referencia a clientes y detalle de líneas en JSON.
 - `configuracion`: tasa de comisión y revisión de los datos.
 

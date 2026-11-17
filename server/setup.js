@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { createPool, databaseName } from './connection.js';
 import { createRepository } from './repository.js';
+import { migrateCatalog } from './migrations/001-catalogo-productos-lotes.js';
 import { createInitialData } from '../js/datos/datos-iniciales.js';
 
 // Crea las tablas y carga ejemplos solo si la base nunca fue inicializada.
@@ -16,6 +17,8 @@ try {
     .map((s) => s.trim())
     .filter(Boolean))
     await pool.query(statement);
+  const migrated = await migrateCatalog(pool);
+  if (migrated) console.log('Inventario, lotes, órdenes y ventas normalizados.');
   const [[settings]] = await pool.execute('SELECT revision FROM configuracion WHERE id=1');
   if (settings.revision === 0) {
     await createRepository(pool).write(createInitialData(), 0);
