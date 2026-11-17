@@ -92,7 +92,7 @@ export const createInitialData = () => ({
       email: 'ventas@example.cl',
       phone: '+56 45 222 3040',
       terms: 'Crédito a 30 días',
-      delivery: '48 horas',
+      delivery: '48',
       status: 'Activo'
     },
     {
@@ -103,7 +103,7 @@ export const createInitialData = () => ({
       email: 'contacto@example.cl',
       phone: '+56 45 233 4050',
       terms: 'Crédito a 45 días',
-      delivery: '72 horas',
+      delivery: '72',
       status: 'Activo'
     },
     {
@@ -114,7 +114,7 @@ export const createInitialData = () => ({
       email: 'pedidos@example.cl',
       phone: '+56 2 2444 5060',
       terms: 'Contado',
-      delivery: '24 horas',
+      delivery: '24',
       status: 'Activo'
     }
   ],

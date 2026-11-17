@@ -131,3 +131,16 @@ test('la API no permite omitir el teléfono en un objeto alterado', () => {
   delete state.clients[0].phone;
   assert.throws(() => validateState(state), /teléfono/i);
 });
+
+test('plazo de entrega exige solo dígitos y un entero positivo en proveedores', () => {
+  for (const delivery of ['48 horas', '48.5', '48-72', '48 días', '+48', '0', '10000', '']) {
+    const state = createInitialData();
+    state.suppliers[0].delivery = delivery;
+    assert.throws(() => validateState(state), /plazo de entrega/i, delivery || 'vacío');
+  }
+  for (const delivery of ['1', '48', '365']) {
+    const state = createInitialData();
+    state.suppliers[0].delivery = delivery;
+    assert.doesNotThrow(() => validateState(state), delivery);
+  }
+});

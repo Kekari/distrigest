@@ -48,15 +48,14 @@ export function validateState(state) {
       if (row.phone === undefined || row.phone === null)
         fail('El campo teléfono debe estar presente.');
       required(row, ['name', 'rut', 'contact', 'email', 'status']);
-      required(
-        row,
-        key === 'clients' ? ['giro', 'address', 'zone', 'seller'] : ['terms', 'delivery']
-      );
+      required(row, key === 'clients' ? ['giro', 'address', 'zone', 'seller'] : ['terms']);
       const rut = row.rut.replace(/[.\s-]/g, '').toUpperCase();
       if (ruts.has(rut)) fail('RUT repetido.');
       ruts.add(rut);
       if (row.phone !== undefined && row.phone !== null && !isValidChileanPhone(row.phone))
         fail(`Teléfono inválido para ${key === 'clients' ? 'el cliente' : 'el proveedor'}.`);
+      if (key === 'suppliers' && !/^[1-9]\d{0,3}$/.test(row.delivery || ''))
+        fail('El plazo de entrega debe ser un número entero positivo de días.');
       if (!['Activo', 'Inactivo'].includes(row.status)) fail('Estado inválido.');
     }
   }

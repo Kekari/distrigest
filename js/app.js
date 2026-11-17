@@ -656,7 +656,7 @@ function editSupplier(id) {
   const s = db.suppliers.find((s) => s.id === id) || {};
   openModal(
     s.id ? 'Editar proveedor' : 'Nuevo proveedor',
-    `<div class="form-grid">${field('name', 'Razón social', s.name)}${field('rut', 'RUT', s.rut)}${field('contact', 'Nombre de contacto', s.contact)}${field('email', 'Correo electrónico', s.email, 'email')}${field('phone', 'Teléfono', s.phone, 'tel', false, 'inputmode="tel" autocomplete="tel" maxlength="16" placeholder="+56 9 1234 5678"')}${field('terms', 'Condiciones comerciales', s.terms, 'text', true, 'placeholder="Ej. Crédito a 30 días"')}${field('delivery', 'Plazo de entrega', s.delivery, 'text', true, 'placeholder="Ej. 48 horas"')}${selectField('status', 'Estado', ['Activo', 'Inactivo'], s.status)}</div>`,
+    `<div class="form-grid">${field('name', 'Razón social', s.name)}${field('rut', 'RUT', s.rut)}${field('contact', 'Nombre de contacto', s.contact)}${field('email', 'Correo electrónico', s.email, 'email')}${field('phone', 'Teléfono', s.phone, 'tel', false, 'inputmode="tel" autocomplete="tel" maxlength="16" placeholder="+56 9 1234 5678"')}${field('terms', 'Condiciones comerciales', s.terms, 'text', true, 'placeholder="Ej. Crédito a 30 días"')}${field('delivery', 'Plazo de entrega (días)', s.delivery, 'number', true, 'min="1" max="9999" step="1" inputmode="numeric" placeholder="Ej. 48"')}${selectField('status', 'Estado', ['Activo', 'Inactivo'], s.status)}</div>`,
     async (f) => {
       const data = Object.fromEntries(f);
       if (!isValidChileanPhone(data.phone)) {
@@ -674,6 +674,8 @@ function editSupplier(id) {
         throw new Error('Ingresa un teléfono chileno válido de 9 dígitos. Puedes incluir +56.');
       if (db.suppliers.some((x) => x.id !== id && cleanRut(x.rut) === cleanRut(data.rut)))
         throw new Error('Ya existe un proveedor con ese RUT.');
+      if (!/^[1-9]\d{0,3}$/.test(data.delivery))
+        throw new Error('El plazo de entrega debe ser un número entero entre 1 y 9999 días.');
       if (s.id)
         Object.assign(
           db.suppliers.find((item) => item.id === s.id),
